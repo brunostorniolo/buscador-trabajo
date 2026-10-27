@@ -68,8 +68,14 @@
     "nurse", "driver", "accountant", "machine learning", "qa", "sre", "pharma"
   ],
 
-  "busquedas_getonbrd": ["video", "audiovisual", "contenido", "fotografia",
-                          "marketing", "social media", "ventas"],
+  "argentina": ["argentina", "buenos aires", "caba", "cordoba", "rosario", "mendoza",
+                "la plata", "mar del plata", "tucuman", "neuquen", "santa fe"],
 
-  "tags_jobicy": ["video", "marketing", "design", "sales"]
+  "busquedas_getonbrd": ["video", "editor", "edicion", "audiovisual", "filmmaker",
+                          "fotografo", "fotografia", "camarografo", "contenido",
+                          "creador de contenido", "community manager", "redes sociales",
+                          "social media", "marketing", "publicidad", "ventas", "comercial"],
+
+  "tags_jobicy": ["video", "marketing", "design", "sales"],
+  "geos_jobicy": ["argentina", "latam"]
 }

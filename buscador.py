@@ -116,8 +116,10 @@ def fuente_weworkremotely(cfg):
 
 
 def fuente_jobicy(cfg):
-    for tag in cfg.get("tags_jobicy", []):
-        q = urllib.parse.urlencode({"count": 50, "tag": tag})
+    filtros = [{"tag": t} for t in cfg.get("tags_jobicy", [])]
+    filtros += [{"geo": g} for g in cfg.get("geos_jobicy", [])]
+    for filtro in filtros:
+        q = urllib.parse.urlencode({"count": 50, **filtro})
         datos = descargar(f"https://jobicy.com/api/v2/remote-jobs?{q}")
         for j in datos.get("jobs", []):
             salario = ""
@@ -153,10 +155,33 @@ FUENTES = [fuente_remoteok, fuente_remotive, fuente_weworkremotely, fuente_jobic
 
 # ---------------------------------------------------------------- puntaje
 
+PALABRAS_ES = {"de", "la", "que", "el", "en", "los", "del", "las", "por", "para", "con", "una",
+               "nuestro", "nuestra", "buscamos", "experiencia", "trabajo", "equipo", "somos"}
+PALABRAS_EN = {"the", "and", "to", "of", "you", "with", "for", "our", "we", "will", "are",
+               "is", "your", "team", "experience", "looking"}
+
+
+def en_espanol(o):
+    palabras = re.findall(r"[a-z]+", normalizar(f"{o['titulo']} {o['descripcion']}"))
+    es = sum(p in PALABRAS_ES for p in palabras)
+    en = sum(p in PALABRAS_EN for p in palabras)
+    return es > en
+
+
+def te_sirve(o, cfg):
+    """Solo ofertas en Argentina, o remotas en español."""
+    en_argentina = any(contiene(normalizar(o["ubicacion"]), p) for p in cfg["argentina"])
+    if o["remoto"]:
+        return en_argentina or en_espanol(o)
+    return en_argentina
+
+
 def puntuar(o, cfg):
     """Devuelve (puntaje 0-100, perfil principal, palabras encontradas) o None si se descarta."""
     titulo = normalizar(o["titulo"])
     if any(contiene(titulo, p) for p in cfg["excluir_si_el_titulo_dice"]):
+        return None
+    if not te_sirve(o, cfg):
         return None
 
     texto = normalizar(o["descripcion"])
@@ -269,6 +294,14 @@ def main():
 
     con = sqlite3.connect(BASE)
     con.executescript(ESQUEMA)
+
+    # saca las ofertas sin tocar que ya no cumplen los filtros (por si cambiaste config.json)
+    con.row_factory = sqlite3.Row
+    viejas = [dict(f) for f in con.execute("SELECT * FROM ofertas WHERE estado = 'nueva'")]
+    con.row_factory = None
+    for o in viejas:
+        if not te_sirve(o, cfg):
+            con.execute("DELETE FROM ofertas WHERE id = ?", (o["id"],))
 
     nuevas, vistas = [], set()
     for fuente in FUENTES:
