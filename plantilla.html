@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ofertas de trabajo</title>
+<meta property="og:title" content="Ofertas de trabajo">
+<meta property="og:description" content="Video, filmmaking, contenido, marketing y ventas. Actualizado __ACTUALIZADO__">
+<meta name="theme-color" content="#111318">
+<style>
+  :root {
+    --bg: #f6f6f4; --card: #ffffff; --text: #1b1c1f; --muted: #6b6e76; --line: #e3e3df;
+    --accent: #2f5bd3; --alto: #1f8a4c; --medio: #b7791f; --bajo: #8a8d95; --chip: #ececE8;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #111318; --card: #1a1d24; --text: #e9eaee; --muted: #9a9ea8; --line: #2a2e37;
+      --accent: #7d9cff; --alto: #4cc483; --medio: #e0a84a; --bajo: #7c808a; --chip: #252933;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+         font: 15px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+  header { position: sticky; top: 0; z-index: 2; background: var(--bg);
+           padding: 14px 16px 10px; border-bottom: 1px solid var(--line); }
+  h1 { font-size: 20px; margin: 0 0 2px; }
+  .sub { color: var(--muted); font-size: 13px; margin: 0 0 10px; }
+  input[type=search] { width: 100%; padding: 10px 12px; font-size: 16px; border-radius: 10px;
+         border: 1px solid var(--line); background: var(--card); color: var(--text); }
+  .chips { display: flex; gap: 6px; overflow-x: auto; padding: 10px 0 2px; scrollbar-width: none; }
+  .chip { flex: none; border: 0; border-radius: 999px; padding: 6px 12px; font-size: 13px;
+          background: var(--chip); color: var(--text); cursor: pointer; }
+  .chip.on { background: var(--accent); color: #fff; }
+  main { max-width: 720px; margin: 0 auto; padding: 12px 16px 40px; }
+  .card { display: block; text-decoration: none; color: inherit; background: var(--card);
+          border: 1px solid var(--line); border-radius: 14px; padding: 14px; margin-bottom: 10px; }
+  .top { display: flex; gap: 12px; align-items: flex-start; }
+  .score { flex: none; width: 44px; height: 44px; border-radius: 12px; display: grid; place-items: center;
+           font-weight: 700; color: #fff; font-size: 16px; }
+  .titulo { font-weight: 650; font-size: 16px; margin: 0; }
+  .empresa { color: var(--muted); margin: 2px 0 0; }
+  .meta { display: flex; flex-wrap: wrap; gap: 4px 10px; color: var(--muted); font-size: 13px; margin-top: 8px; }
+  .nueva { color: var(--alto); font-weight: 600; }
+  .resumen { color: var(--muted); font-size: 13px; margin: 8px 0 0;
+             display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .vacio { text-align: center; color: var(--muted); padding: 40px 0; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Ofertas de trabajo</h1>
+  <p class="sub" id="sub"></p>
+  <input type="search" id="buscar" placeholder="Buscar puesto, empresa, lugar…">
+  <div class="chips" id="chips"></div>
+</header>
+<main id="lista"></main>
+
+<script>
+const OFERTAS = __OFERTAS__;
+const ACTUALIZADO = "__ACTUALIZADO__";
+const HOY = ACTUALIZADO.slice(0, 10);
+
+let filtro = "Todas";
+const perfiles = ["Todas", "Nuevas hoy", ...new Set(OFERTAS.map(o => o.perfil))];
+
+document.getElementById("sub").textContent =
+  `${OFERTAS.length} ofertas · actualizado ${ACTUALIZADO}`;
+
+const chips = document.getElementById("chips");
+for (const p of perfiles) {
+  const b = document.createElement("button");
+  b.className = "chip" + (p === filtro ? " on" : "");
+  b.textContent = p;
+  b.onclick = () => { filtro = p; chips.querySelectorAll(".chip").forEach(c => c.classList.toggle("on", c === b)); pintar(); };
+  chips.appendChild(b);
+}
+
+function color(p) { return p >= 60 ? "var(--alto)" : p >= 45 ? "var(--medio)" : "var(--bajo)"; }
+
+function el(tag, cls, texto) {
+  const e = document.createElement(tag);
+  if (cls) e.className = cls;
+  if (texto) e.textContent = texto;
+  return e;
+}
+
+function pintar() {
+  const q = document.getElementById("buscar").value.trim().toLowerCase();
+  const lista = document.getElementById("lista");
+  lista.replaceChildren();
+  const visibles = OFERTAS.filter(o =>
+    (filtro === "Todas" || (filtro === "Nuevas hoy" ? (o.encontrada_en || "").startsWith(HOY) : o.perfil === filtro)) &&
+    (!q || `${o.titulo} ${o.empresa} ${o.ubicacion}`.toLowerCase().includes(q)));
+
+  if (!visibles.length) { lista.appendChild(el("p", "vacio", "No hay ofertas con ese filtro.")); return; }
+
+  for (const o of visibles) {
+    const a = el("a", "card");
+    a.href = o.url; a.target = "_blank"; a.rel = "noopener";
+    const top = el("div", "top");
+    const s = el("div", "score", String(o.puntaje));
+    s.style.background = color(o.puntaje);
+    const info = el("div");
+    info.append(el("p", "titulo", o.titulo), el("p", "empresa", o.empresa || "—"));
+    top.append(s, info);
+
+    const meta = el("div", "meta");
+    if ((o.encontrada_en || "").startsWith(HOY)) meta.appendChild(el("span", "nueva", "● Nueva"));
+    for (const t of [o.perfil, o.ubicacion, o.salario, o.publicada, o.fuente]) if (t) meta.appendChild(el("span", "", t));
+
+    a.append(top, meta);
+    if (o.resumen) a.appendChild(el("p", "resumen", o.resumen));
+    lista.appendChild(a);
+  }
+}
+
+document.getElementById("buscar").addEventListener("input", pintar);
+pintar();
+</script>
+</body>
+</html>

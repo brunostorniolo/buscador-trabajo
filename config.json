@@ -1,0 +1,75 @@
+{
+  "puntaje_minimo": 35,
+
+  "perfiles": {
+    "Edición de video": {
+      "prioridad": 1.0,
+      "palabras": [
+        "video editor", "editor de video", "editor de videos", "editor audiovisual",
+        "video editing", "edicion de video", "post production", "postproduccion",
+        "premiere", "after effects", "davinci", "final cut", "motion graphics",
+        "motion designer", "reels", "youtube", "short form", "video"
+      ]
+    },
+    "Filmmaker / Fotografía": {
+      "prioridad": 1.0,
+      "palabras": [
+        "filmmaker", "videographer", "videografo", "camarografo", "camera operator",
+        "director de fotografia", "cinematographer", "photographer", "fotografo",
+        "fotografia", "photography", "productor audiovisual", "video producer",
+        "audiovisual", "produccion audiovisual", "content producer"
+      ]
+    },
+    "Contenido / Redes": {
+      "prioridad": 0.9,
+      "palabras": [
+        "content creator", "creador de contenido", "creadora de contenido",
+        "social media", "redes sociales", "community manager", "ugc",
+        "tiktok", "instagram", "content strategist", "contenido digital", "contenido"
+      ]
+    },
+    "Marketing / Publicidad": {
+      "prioridad": 0.65,
+      "palabras": [
+        "marketing", "publicidad", "advertising", "brand", "marca", "creative",
+        "creativo", "campaign", "campana", "copywriter", "agencia"
+      ]
+    },
+    "Ventas": {
+      "prioridad": 0.5,
+      "palabras": [
+        "sales", "ventas", "vendedor", "vendedora", "comercial", "account executive",
+        "business development", "sdr", "bdr", "ejecutivo de cuentas", "closer"
+      ]
+    }
+  },
+
+  "ubicaciones_que_te_sirven": [
+    "remoto", "remote", "anywhere", "worldwide", "global", "latam", "latin america",
+    "latinoamerica", "south america", "americas", "argentina", "buenos aires"
+  ],
+  "penalizacion_otra_ubicacion": -25,
+
+  "bonus": {
+    "palabras": ["argentina", "buenos aires", "latam", "latin america", "latinoamerica",
+                  "spanish", "espanol", "worldwide", "anywhere"],
+    "puntos": 10
+  },
+
+  "restricciones_geograficas": {
+    "palabras": ["us only", "usa only", "u.s. only", "united states only", "us-based",
+                  "must be located in the us", "uk only", "eu only", "europe only",
+                  "canada only"],
+    "puntos": -30
+  },
+
+  "excluir_si_el_titulo_dice": [
+    "engineer", "developer", "devops", "backend", "frontend", "full stack", "fullstack",
+    "nurse", "driver", "accountant", "machine learning", "qa", "sre", "pharma"
+  ],
+
+  "busquedas_getonbrd": ["video", "audiovisual", "contenido", "fotografia",
+                          "marketing", "social media", "ventas"],
+
+  "tags_jobicy": ["video", "marketing", "design", "sales"]
+}

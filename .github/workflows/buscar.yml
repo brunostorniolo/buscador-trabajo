@@ -1,0 +1,30 @@
+name: Buscar ofertas
+
+on:
+  schedule:
+    - cron: "0 12 * * *"   # 12:00 UTC = 9:00 en Argentina
+  workflow_dispatch:         # permite correrlo a mano desde la pestaña Actions
+
+permissions:
+  contents: write
+
+jobs:
+  buscar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Buscar ofertas y generar la página
+        run: python buscador.py
+
+      - name: Guardar resultados
+        run: |
+          git config user.name "buscador-bot"
+          git config user.email "buscador-bot@users.noreply.github.com"
+          git add ofertas.db docs/index.html
+          git diff --cached --quiet || git commit -m "Ofertas $(TZ=America/Argentina/Buenos_Aires date +'%Y-%m-%d')"
+          git push
