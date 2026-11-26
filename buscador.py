@@ -10,8 +10,11 @@ Uso:
 """
 
 import csv
+import email
 import html
+import imaplib
 import json
+import os
 import re
 import sqlite3
 import sys
@@ -150,7 +153,73 @@ def fuente_getonbrd(cfg):
                          ubic, publicada, salario, bool(a.get("remote")))
 
 
-FUENTES = [fuente_remoteok, fuente_remotive, fuente_weworkremotely, fuente_jobicy, fuente_getonbrd]
+def texto_del_email(msg):
+    """Devuelve el cuerpo del email como texto, una línea por párrafo."""
+    texto, html_ = "", ""
+    for parte in msg.walk():
+        tipo = parte.get_content_type()
+        if tipo not in ("text/plain", "text/html"):
+            continue
+        cuerpo = parte.get_payload(decode=True).decode(parte.get_content_charset() or "utf-8", "replace")
+        if tipo == "text/plain":
+            texto += cuerpo
+        else:
+            html_ += cuerpo
+    if "jobs/view/" in texto:
+        return texto
+    # sin parte de texto útil: convertimos el HTML respetando los saltos de bloque
+    html_ = re.sub(r"(?is)<(style|script)[^>]*>.*?</\1>", " ", html_)
+    html_ = re.sub(r'(?is)<a\s[^>]*href="([^"]*jobs/view/[^"]*)"[^>]*>(.*?)</a>', r"\n\2\n\1\n", html_)
+    html_ = re.sub(r"(?i)<(br|/p|/div|/td|/tr|/h\d|/li)[^>]*>", "\n", html_)
+    return html.unescape(re.sub(r"<[^>]+>", " ", html_))
+
+
+def fuente_linkedin(cfg):
+    """Lee las alertas de empleo de LinkedIn que llegan a tu Gmail (no entra a LinkedIn)."""
+    usuario, clave = os.environ.get("GMAIL_USUARIO"), os.environ.get("GMAIL_CLAVE_APP")
+    if not usuario or not clave:
+        print("  linkedin        sin configurar (faltan GMAIL_USUARIO y GMAIL_CLAVE_APP)")
+        return
+    desde = (datetime.now(ARGENTINA) - timedelta(days=3)).strftime("%d-%b-%Y")
+    with imaplib.IMAP4_SSL("imap.gmail.com") as imap:
+        imap.login(usuario, clave)
+        imap.select("INBOX", readonly=True)  # solo lectura: no marca nada como leído
+        for remitente in cfg.get("remitentes_linkedin", []):
+            _, ids = imap.search(None, "FROM", f'"{remitente}"', "SINCE", desde)
+            for num in ids[0].split():
+                _, datos = imap.fetch(num, "(BODY.PEEK[])")
+                msg = email.message_from_bytes(datos[0][1])
+                encontradas = list(ofertas_de_alerta(texto_del_email(msg)))
+                # solo el número: el repositorio es público y no hay que mostrar el contenido del email
+                print(f"  linkedin        alerta con {len(encontradas)} ofertas")
+                yield from encontradas
+
+
+def ofertas_de_alerta(texto):
+    """En las alertas cada oferta es: puesto / empresa / ubicación y después el link."""
+    previas, vistas = [], set()
+    for linea in (l.strip() for l in texto.splitlines()):
+        m = re.search(r"linkedin\.com/(?:comm/)?jobs/view/(\d+)", linea)
+        if m:
+            id_ = m.group(1)
+            datos = [p for p in previas if len(p) < 120][-3:]
+            if id_ not in vistas and len(datos) >= 2:
+                vistas.add(id_)
+                if len(datos) == 2:  # a veces empresa y ubicación vienen en la misma línea
+                    empresa, _, ubic = datos[1].partition("·")
+                    datos = [datos[0], empresa, ubic]
+                titulo, empresa, ubic = (d.strip(" ·-") for d in datos)
+                remoto = bool(re.search(r"remot|remote", normalizar(ubic)))
+                yield oferta("LinkedIn", id_, titulo, empresa,
+                             f"https://www.linkedin.com/jobs/view/{id_}/", "",
+                             ubic, datetime.now(ARGENTINA).strftime("%Y-%m-%d"), "", remoto)
+            previas = []
+        elif linea and not re.match(r"^(https?://|[-=_]{3,})", linea):
+            previas.append(linea)
+
+
+FUENTES = [fuente_remoteok, fuente_remotive, fuente_weworkremotely, fuente_jobicy, fuente_getonbrd,
+           fuente_linkedin]
 
 
 # ---------------------------------------------------------------- puntaje

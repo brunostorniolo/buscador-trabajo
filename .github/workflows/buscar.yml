@@ -2,7 +2,7 @@ name: Buscar ofertas
 
 on:
   schedule:
-    - cron: "0 12 * * *"   # 12:00 UTC = 9:00 en Argentina
+    - cron: "17 10 * * *"  # 10:17 UTC = 7:17 en Argentina; GitHub suele atrasarlo, así que está a las 9 o antes
   workflow_dispatch:         # permite correrlo a mano desde la pestaña Actions
 
 permissions:
@@ -20,6 +20,9 @@ jobs:
 
       - name: Buscar ofertas y generar la página
         run: python buscador.py
+        env:
+          GMAIL_USUARIO: ${{ secrets.GMAIL_USUARIO }}
+          GMAIL_CLAVE_APP: ${{ secrets.GMAIL_CLAVE_APP }}
 
       - name: Guardar resultados
         run: |

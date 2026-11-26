@@ -76,6 +76,8 @@
                           "creador de contenido", "community manager", "redes sociales",
                           "social media", "marketing", "publicidad", "ventas", "comercial"],
 
+  "remitentes_linkedin": ["jobalerts-noreply@linkedin.com"],
+
   "tags_jobicy": ["video", "marketing", "design", "sales"],
   "geos_jobicy": ["argentina", "latam"]
 }
